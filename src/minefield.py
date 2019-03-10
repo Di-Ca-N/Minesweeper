@@ -1,5 +1,7 @@
 import wx
 
+from .cell import Cell
+
 
 class MineField(wx.Frame):
     button_size = 35
@@ -34,18 +36,14 @@ class MineField(wx.Frame):
 
         for row in range(rows):
             for col in range(cols):
-                button = wx.Button(self, id=wx.NewId(), size=(self.button_size, self.button_size), style=wx.NO_BORDER)
+                cell = Cell(
+                    value=field_data_structure[row][col], position=(row, col),
+                    parent=self, id=wx.NewId(), size=(self.button_size, self.button_size), style=wx.NO_BORDER)
 
-                button.state = 'closed'
-                button.value = field_data_structure[row][col]
-                button.position = (row, col)
+                cell.Bind(wx.EVT_RIGHT_DOWN, self.on_button_right_click)
+                cell.Bind(wx.EVT_LEFT_DOWN, self.on_button_click)
 
-                button.SetBackgroundColour(wx.LIGHT_GREY)
-
-                button.Bind(wx.EVT_RIGHT_DOWN, self.on_button_right_click)
-                button.Bind(wx.EVT_LEFT_DOWN, self.on_button_click)
-
-                sizer.Add(button)
+                sizer.Add(cell)
 
         return sizer
 
@@ -75,51 +73,47 @@ class MineField(wx.Frame):
                 self.win()
 
     def on_button_click(self, event):
-        clicked_button = event.GetEventObject()
-        if self.alive:
-            if clicked_button.state == 'closed':
-                self.propagate_click(clicked_button.GetId())
+        clicked_cell = event.GetEventObject()
 
-            elif clicked_button.state == 'opened':
-                neighbors = self.get_neighbors(clicked_button)
+        if self.alive:
+            if clicked_cell.state == 'closed':
+                self.propagate_click(clicked_cell.GetId())
+
+            elif clicked_cell.state == 'opened':
+                neighbors = self.get_neighbors(clicked_cell)
                 marked_neighbors = 0
                 for each_neighbor in neighbors:
-                    button = wx.FindWindowById(each_neighbor)
+                    button = self.FindWindowById(each_neighbor)
                     if button.state == 'marked':
                         marked_neighbors += 1
 
-                if marked_neighbors == int(clicked_button.value):
+                if marked_neighbors == int(clicked_cell.value):
                     for each_neighbor in neighbors:
                         self.propagate_click(each_neighbor)
 
             if self.verify_victory():
                 self.win()
 
-    def propagate_click(self, button_id):
-        button = self.FindWindowById(button_id)
-        if button.state == 'closed':
-            button.SetBackgroundColour(wx.YELLOW)
+    def propagate_click(self, cell_id):
+        cell = self.FindWindowById(cell_id)
 
-            button.state = 'opened'
+        if cell.state == 'closed':
+            value = cell.open()
 
-            if button.value == '0':
-                for each_neighbor in self.get_neighbors(button):
+            if value == '0':
+                for each_neighbor in self.get_neighbors(cell):
                     self.propagate_click(each_neighbor)
 
-            else:
-                button.SetLabel(button.value)
+            elif value == '*':
+                self.game_over()
 
-                if button.value == '*':
-                    button.SetBackgroundColour(wx.RED)
-                    self.game_over()
-
-    def get_neighbors(self, button):
-        button_id = button.GetId()
+    def get_neighbors(self, cell):
+        cell_id = cell.GetId()
 
         all_neighbors = [
-            button_id-self.row_length-1, button_id-self.row_length, button_id-self.row_length+1,
-            button_id-1,                                            button_id+1,
-            button_id+self.row_length-1, button_id+self.row_length, button_id+self.row_length+1,
+            cell_id-self.col_length-1, cell_id-self.col_length, cell_id-self.col_length+1,
+            cell_id-1,                                            cell_id+1,
+            cell_id+self.col_length-1, cell_id+self.col_length, cell_id+self.col_length+1,
         ]
 
         true_neighbors = []
@@ -131,13 +125,13 @@ class MineField(wx.Frame):
             really_neighbor = False
 
             if valid_id:
-                really_x_neighbor = neighbor_button.position[0] in (button.position[0] - 1,
-                                                                    button.position[0],
-                                                                    button.position[0] + 1)
+                really_x_neighbor = neighbor_button.position[0] in (cell.position[0] - 1,
+                                                                    cell.position[0],
+                                                                    cell.position[0] + 1)
 
-                really_y_neighbor = neighbor_button.position[1] in (button.position[1] - 1,
-                                                                    button.position[1],
-                                                                    button.position[1] + 1)
+                really_y_neighbor = neighbor_button.position[1] in (cell.position[1] - 1,
+                                                                    cell.position[1],
+                                                                    cell.position[1] + 1)
 
                 really_neighbor = really_x_neighbor and really_y_neighbor
 
@@ -156,21 +150,19 @@ class MineField(wx.Frame):
         marked_bombs = 0
         only_bombs_marked = True
         total_bombs = len(self.bomb_positions)
-        print('começou')
+
         for cell_id in range(100, self.get_max_id()):
-            cell = wx.FindWindowById(cell_id)
+            cell = self.FindWindowById(cell_id)
             if cell.state == 'marked':
                 if cell.value == '*':
                     marked_bombs += 1
                 else:
                     only_bombs_marked = False
 
-        print('terminou')
         if marked_bombs == total_bombs and only_bombs_marked:
             return True
 
         return False
-
 
     def get_max_id(self):
         return self.col_length * self.row_length + 100
@@ -182,3 +174,4 @@ class MineField(wx.Frame):
 
     def win(self):
         wx.MessageBox("You Win!")
+        self.alive = False
