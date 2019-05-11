@@ -2,77 +2,73 @@ import random
 
 
 class FieldDataStructure:
-    """Manage the data structure used to generate the Minesweeper field"""
     def __init__(self, rows, cols, number_of_bombs):
         self.rows = rows
         self.cols = cols
         self.number_of_bombs = number_of_bombs
-        self.field = self.generate_field()
+
+        self.bombs_places = self.get_bombs_places()
+        self.field = self.generate_blank_field()
+        self.place_bombs_on_field()
+        self.calculate_bombs_neighborhood()
+
+    def __repr__(self):
+        structure_str = ""
+
+        for row in self.field:
+            structure_str += "\t"
+            structure_str += " ".join(row)
+            structure_str += "\n"
+
+        return "FieldDataStructure(\n{})".format(structure_str)
 
     def __getitem__(self, item):
         return self.field[item]
 
-    def reset_properties(self, rows=None, cols=None, number_of_bombs=None):
-        if rows is not None:
-            self.rows = rows
+    def __len__(self):
+        return self.cols * self.rows
 
-        if cols is not None:
-            self.cols = cols
-
-        if number_of_bombs is not None:
-            self.number_of_bombs = number_of_bombs
-
-        self.field = self.generate_field()
-
-    def generate_field(self):
-        blank_field = self.generate_data_structure(self.rows, self.cols)
-        self.bomb_places = self.get_bombs_places(self.rows, self.cols, self.number_of_bombs)
-        filled_field = self.place_bombs_on_structure(blank_field, self.bomb_places)
-        field = self.calculate_neighborhood(filled_field)
-
-        return field
-
-    @staticmethod
-    def generate_data_structure(rows, cols):
-        return [[" " for col in range(cols)] for row in range(rows)]
-
-    @staticmethod
-    def get_bombs_places(rows, cols, number_of_bombs):
+    def get_bombs_places(self):
         list_of_bombs = []
 
-        for bomb in range(number_of_bombs):
-            x = random.randrange(rows)
-            y = random.randrange(cols)
+        for bomb in range(self.number_of_bombs):
+            x = random.randrange(self.rows)
+            y = random.randrange(self.cols)
 
             while (x, y) in list_of_bombs:
-                x = random.randrange(rows)
-                y = random.randrange(cols)
+                x = random.randrange(self.rows)
+                y = random.randrange(self.cols)
 
             list_of_bombs.append((x, y))
 
         return list_of_bombs
 
-    @staticmethod
-    def place_bombs_on_structure(structure, bomb_places_list):
-        for bomb in bomb_places_list:
+    def generate_blank_field(self):
+        field = []
+        for i in range(self.rows):
+            row = []
+
+            for j in range(self.cols):
+                row.append(" ")
+
+            field.append(row)
+
+        return field
+
+    def place_bombs_on_field(self):
+        for bomb in self.bombs_places:
             x = bomb[0]
             y = bomb[1]
 
-            structure[x][y] = "*"
+            self.field[x][y] = "*"
 
-        return structure
-
-    @staticmethod
-    def calculate_neighborhood(field):
-        number_of_rows = len(field)
-        number_of_cols = len(field[0])
-
-        for x in range(number_of_rows):
-            for y in range(number_of_cols):
+    def calculate_bombs_neighborhood(self):
+        for x in range(self.rows):
+            for y in range(self.cols):
                 neighbors = (
-                    (x-1, y-1), (x-1, y), (x-1, y+1),
-                    (x,   y-1),           (x,   y+1),
-                    (x+1, y-1), (x+1, y), (x+1, y+1)
+                    (x - 1, y - 1), (x - 1, y), (x - 1, y + 1),
+                    (x,     y - 1),             (x,     y + 1),
+                    (x + 1, y - 1), (x + 1, y), (x + 1, y + 1)
                 )
 
                 neighbor_bombs = 0
@@ -81,11 +77,12 @@ class FieldDataStructure:
                     x_neighbor = neighbor[0]
                     y_neighbor = neighbor[1]
 
-                    if (0 <= x_neighbor < number_of_rows) and (0 <= y_neighbor < number_of_cols):
-                        if field[x_neighbor][y_neighbor] == "*":
+                    if (0 <= x_neighbor < self.rows) and (0 <= y_neighbor < self.cols):
+                        if self.field[x_neighbor][y_neighbor] == "*":
                             neighbor_bombs += 1
 
-                if field[x][y] != "*":
-                    field[x][y] = str(neighbor_bombs)
+                if self.field[x][y] != "*":
+                    self.field[x][y] = str(neighbor_bombs)
 
-        return field
+    def reset(self, rows=None, cols=None, number_of_bombs=None):
+        self.__init__(rows, cols, number_of_bombs)
