@@ -4,13 +4,13 @@ import wx
 class GeneralMenu(wx.MenuBar):
     def __init__(self, *args, **kwargs):
         super(GeneralMenu, self).__init__(*args, **kwargs)
-        self.Append(FileMenu(), '&File')
+        self.Append(OptionsMenu(), '&File')
         self.Append(HelpMenu(), '&Help')
 
 
-class FileMenu(wx.Menu):
+class OptionsMenu(wx.Menu):
     def __init__(self, *args, **kwargs):
-        super(FileMenu, self).__init__(*args, **kwargs)
+        super(OptionsMenu, self).__init__(*args, **kwargs)
         new_game = self.Append(wx.ID_ANY, "&New Game\tCtrl+N", "Starts a new game")
         self.Bind(wx.EVT_MENU, self.on_new_game, new_game)
 

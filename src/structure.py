@@ -32,14 +32,14 @@ class FieldDataStructure:
         list_of_bombs = []
 
         for bomb in range(self.number_of_bombs):
-            x = random.randrange(self.rows)
-            y = random.randrange(self.cols)
+            r = random.randrange(self.rows)
+            c = random.randrange(self.cols)
 
-            while (x, y) in list_of_bombs:
-                x = random.randrange(self.rows)
-                y = random.randrange(self.cols)
+            while (r, c) in list_of_bombs:
+                r = random.randrange(self.rows)
+                c = random.randrange(self.cols)
 
-            list_of_bombs.append((x, y))
+            list_of_bombs.append((r, c))
 
         return list_of_bombs
 
@@ -63,26 +63,26 @@ class FieldDataStructure:
             self.field[x][y] = "*"
 
     def calculate_bombs_neighborhood(self):
-        for x in range(self.rows):
-            for y in range(self.cols):
+        for r in range(self.rows):
+            for c in range(self.cols):
                 neighbors = (
-                    (x - 1, y - 1), (x - 1, y), (x - 1, y + 1),
-                    (x,     y - 1),             (x,     y + 1),
-                    (x + 1, y - 1), (x + 1, y), (x + 1, y + 1)
+                    (r - 1, c - 1), (r - 1, c), (r - 1, c + 1),
+                    (r,     c - 1),             (r,     c + 1),
+                    (r + 1, c - 1), (r + 1, c), (r + 1, c + 1)
                 )
 
                 neighbor_bombs = 0
 
                 for neighbor in neighbors:
-                    x_neighbor = neighbor[0]
-                    y_neighbor = neighbor[1]
+                    row_neighbor = neighbor[0]
+                    col_neighbor = neighbor[1]
 
-                    if (0 <= x_neighbor < self.rows) and (0 <= y_neighbor < self.cols):
-                        if self.field[x_neighbor][y_neighbor] == "*":
+                    if (0 <= row_neighbor < self.rows) and (0 <= col_neighbor < self.cols):
+                        if self.field[row_neighbor][col_neighbor] == "*":
                             neighbor_bombs += 1
 
-                if self.field[x][y] != "*":
-                    self.field[x][y] = str(neighbor_bombs)
+                if self.field[r][c] != "*":
+                    self.field[r][c] = str(neighbor_bombs)
 
     def reset(self, rows=None, cols=None, number_of_bombs=None):
         self.__init__(rows, cols, number_of_bombs)

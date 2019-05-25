@@ -4,8 +4,6 @@ from cell import Cell
 
 
 class MineField(wx.Panel):
-    BUTTON_SIZE = 35
-
     def __init__(self, field_data, *args, **kwargs):
         super(MineField, self).__init__(*args, **kwargs)
 
@@ -20,15 +18,11 @@ class MineField(wx.Panel):
         self.Show()
 
     def generate_field(self):
-        print(self.field_data)
         sizer = wx.GridBagSizer(1, 1)
 
         for row in range(self.field_data.rows):
             for col in range(self.field_data.cols):
-                cell = Cell(
-                    value=self.field_data[row][col], position=(row, col),
-                    parent=self, id=wx.ID_ANY, size=(self.BUTTON_SIZE, self.BUTTON_SIZE)
-                )
+                cell = Cell(value=self.field_data[row][col], position=(row, col), parent=self)
                 cell.Bind(wx.EVT_LEFT_DOWN, self.on_cell_click)
                 cell.Bind(wx.EVT_RIGHT_DOWN, self.on_cell_right_click)
                 sizer.Add(cell, pos=wx.GBPosition(*cell.position))
